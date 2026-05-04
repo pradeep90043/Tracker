@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useTransition } from 'react';
 import type {
   DailyEntry, FailureLog, WeeklyGoal, WeeklyReview, FocusSession,
   DashboardStats, DisciplineAlert, DisciplineLevel, DailyEntryFormData,
@@ -32,6 +32,7 @@ export function useTracker() {
   const [darkMode, setDarkMode] = useState(true);
   const [loaded, setLoaded] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   // Load from Database on mount
   useEffect(() => {
@@ -55,7 +56,6 @@ export function useTracker() {
         console.log('✅ Tracker data loaded successfully.');
       } catch (error) {
         console.error('❌ Failed to load tracker data:', error);
-        // Fallback to empty states so the UI doesn't hang
         setEntries([]);
         setDarkMode(loadDarkMode());
       } finally {
@@ -75,14 +75,29 @@ export function useTracker() {
   // --------------- Daily Entry actions ---------------
 
   const addDailyEntry = useCallback(async (formData: DailyEntryFormData) => {
+    console.log('📝 addDailyEntry called on client with:', formData.date);
     setSyncing(true);
-    const result = await upsertEntry(formData);
-    if (result.success) {
-      const updated = await getEntries();
-      setEntries(updated);
-      setLockdownDismissed(false);
-    }
-    setSyncing(false);
+    
+    startTransition(async () => {
+      try {
+        const result = await upsertEntry(formData);
+        console.log('📡 upsertEntry result:', result);
+        if (result.success) {
+          const updated = await getEntries();
+          console.log('📥 Fetched updated entries:', updated.length);
+          setEntries(updated);
+          setLockdownDismissed(false);
+        } else {
+          console.error('❌ upsertEntry failed:', result.error);
+          alert('Failed to save entry: ' + result.error);
+        }
+      } catch (err) {
+        console.error('💥 Fatal error in addDailyEntry:', err);
+        alert('A fatal error occurred.');
+      } finally {
+        setSyncing(false);
+      }
+    });
   }, []);
 
   const removeDailyEntry = useCallback(async (id: string) => {
@@ -260,7 +275,7 @@ export function useTracker() {
     focusSessions,
     darkMode,
     loaded,
-    syncing,
+    syncing: syncing || isPending,
     stats,
     alerts,
     disciplineLevel,

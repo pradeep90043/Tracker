@@ -1,30 +1,53 @@
 'use server';
 
+console.log('🔥 trackerActions.ts loaded');
+
 import prisma from '@/lib/prisma';
 import type { DailyEntry, FailureLog, WeeklyGoal, WeeklyReview, FocusSession, DailyEntryFormData } from '@/types';
 import { revalidatePath } from 'next/cache';
 import { createDailyEntry } from '@/lib/scoring';
+import { auth } from '@clerk/nextjs/server';
 
 // --------------- Daily Entries ---------------
 
 export async function getEntries(): Promise<DailyEntry[]> {
+  console.log('🔍 getEntries called');
   try {
+    const { userId } = await auth();
+    if (!userId) {
+      console.log('🚫 No userId found in getEntries');
+      return [];
+    }
+
     const entries = await prisma.dailyEntry.findMany({
+      where: { userId },
       orderBy: { date: 'asc' },
     });
+    console.log(`📊 Found ${entries.length} entries for user ${userId}`);
     return entries as unknown as DailyEntry[];
   } catch (error) {
-    console.error('Failed to fetch entries:', error);
+    console.error('❌ Failed to fetch entries:', error);
     return [];
   }
 }
 
 export async function upsertEntry(formData: DailyEntryFormData) {
+  console.log('🚀 upsertEntry called');
   try {
+    const { userId } = await auth();
+    console.log('👤 userId:', userId);
+    if (!userId) return { success: false, error: 'Unauthorized' };
+
     const entryData = createDailyEntry(formData);
+    console.log('📦 Entry data:', entryData.date);
     
     const entry = await prisma.dailyEntry.upsert({
-      where: { date: entryData.date },
+      where: { 
+        userId_date: {
+          userId,
+          date: entryData.date
+        }
+      },
       update: {
         dsaHours: entryData.dsaHours,
         dsaProblemsSolved: entryData.dsaProblemsSolved,
@@ -42,6 +65,7 @@ export async function upsertEntry(formData: DailyEntryFormData) {
         passed: entryData.passed,
       },
       create: {
+        userId,
         date: entryData.date,
         dsaHours: entryData.dsaHours,
         dsaProblemsSolved: entryData.dsaProblemsSolved,
@@ -60,17 +84,23 @@ export async function upsertEntry(formData: DailyEntryFormData) {
       },
     });
 
+    console.log('✅ Upsert successful');
     revalidatePath('/');
     return { success: true, entry };
   } catch (error) {
-    console.error('Failed to upsert entry:', error);
-    return { success: false, error: 'Database error' };
+    console.error('❌ Upsert error:', error);
+    return { success: false, error: String(error) };
   }
 }
 
 export async function deleteEntry(id: string) {
   try {
-    await prisma.dailyEntry.delete({ where: { id } });
+    const { userId } = await auth();
+    if (!userId) return { success: false };
+
+    await prisma.dailyEntry.deleteMany({ 
+      where: { id, userId } 
+    });
     revalidatePath('/');
     return { success: true };
   } catch (error) {
@@ -83,7 +113,11 @@ export async function deleteEntry(id: string) {
 
 export async function getFailures(): Promise<FailureLog[]> {
   try {
+    const { userId } = await auth();
+    if (!userId) return [];
+
     const failures = await prisma.failureLog.findMany({
+      where: { userId },
       orderBy: { date: 'desc' },
     });
     return failures as unknown as FailureLog[];
@@ -95,8 +129,12 @@ export async function getFailures(): Promise<FailureLog[]> {
 
 export async function addFailure(data: Omit<FailureLog, 'id'>) {
   try {
+    const { userId } = await auth();
+    if (!userId) return { success: false };
+
     const failure = await prisma.failureLog.create({
       data: {
+        userId,
         date: data.date,
         missedTask: data.missedTask,
         reason: data.reason,
@@ -115,7 +153,12 @@ export async function addFailure(data: Omit<FailureLog, 'id'>) {
 
 export async function deleteFailure(id: string) {
   try {
-    await prisma.failureLog.delete({ where: { id } });
+    const { userId } = await auth();
+    if (!userId) return { success: false };
+
+    await prisma.failureLog.deleteMany({ 
+      where: { id, userId } 
+    });
     revalidatePath('/');
     return { success: true };
   } catch (error) {
@@ -127,7 +170,12 @@ export async function deleteFailure(id: string) {
 
 export async function getGoals(): Promise<WeeklyGoal[]> {
   try {
-    return await prisma.weeklyGoal.findMany() as unknown as WeeklyGoal[];
+    const { userId } = await auth();
+    if (!userId) return [];
+
+    return await prisma.weeklyGoal.findMany({
+      where: { userId }
+    }) as unknown as WeeklyGoal[];
   } catch (error) {
     return [];
   }
@@ -135,8 +183,16 @@ export async function getGoals(): Promise<WeeklyGoal[]> {
 
 export async function upsertGoal(goal: WeeklyGoal) {
   try {
+    const { userId } = await auth();
+    if (!userId) return { success: false };
+
     const result = await prisma.weeklyGoal.upsert({
-      where: { weekStart: goal.weekStart },
+      where: { 
+        userId_weekStart: {
+          userId,
+          weekStart: goal.weekStart
+        }
+      },
       update: {
         dsaTopics: goal.dsaTopics,
         backendTopics: goal.backendTopics,
@@ -148,6 +204,7 @@ export async function upsertGoal(goal: WeeklyGoal) {
         projectGoalCompleted: goal.projectGoalCompleted,
       },
       create: {
+        userId,
         weekStart: goal.weekStart,
         weekEnd: goal.weekEnd,
         dsaTopics: goal.dsaTopics,
@@ -171,7 +228,12 @@ export async function upsertGoal(goal: WeeklyGoal) {
 
 export async function getReviews(): Promise<WeeklyReview[]> {
   try {
-    return await prisma.weeklyReview.findMany() as unknown as WeeklyReview[];
+    const { userId } = await auth();
+    if (!userId) return [];
+
+    return await prisma.weeklyReview.findMany({
+      where: { userId }
+    }) as unknown as WeeklyReview[];
   } catch (error) {
     return [];
   }
@@ -179,8 +241,16 @@ export async function getReviews(): Promise<WeeklyReview[]> {
 
 export async function addReview(data: Omit<WeeklyReview, 'id' | 'createdAt'>) {
   try {
+    const { userId } = await auth();
+    if (!userId) return { success: false };
+
     const review = await prisma.weeklyReview.upsert({
-      where: { weekStart: data.weekStart },
+      where: { 
+        userId_weekStart: {
+          userId,
+          weekStart: data.weekStart
+        }
+      },
       update: {
         metGoals: data.metGoals,
         whatWentWrong: data.whatWentWrong,
@@ -188,6 +258,7 @@ export async function addReview(data: Omit<WeeklyReview, 'id' | 'createdAt'>) {
         rating: data.rating,
       },
       create: {
+        userId,
         weekStart: data.weekStart,
         weekEnd: data.weekEnd,
         metGoals: data.metGoals,
@@ -207,7 +278,11 @@ export async function addReview(data: Omit<WeeklyReview, 'id' | 'createdAt'>) {
 
 export async function getFocusSessions(): Promise<FocusSession[]> {
   try {
+    const { userId } = await auth();
+    if (!userId) return [];
+
     const sessions = await prisma.focusSession.findMany({
+      where: { userId },
       orderBy: { completedAt: 'desc' },
     });
     return sessions as unknown as FocusSession[];
@@ -218,8 +293,12 @@ export async function getFocusSessions(): Promise<FocusSession[]> {
 
 export async function addFocusSession(data: Omit<FocusSession, 'id'>) {
   try {
+    const { userId } = await auth();
+    if (!userId) return { success: false };
+
     const session = await prisma.focusSession.create({
       data: {
+        userId,
         date: data.date,
         category: data.category,
         durationMinutes: data.durationMinutes,
@@ -236,15 +315,22 @@ export async function addFocusSession(data: Omit<FocusSession, 'id'>) {
 
 export async function seedDatabase(entries: any[], failures: any[], goals: any[]) {
   try {
-    // Clear existing
-    await prisma.dailyEntry.deleteMany();
-    await prisma.failureLog.deleteMany();
-    await prisma.weeklyGoal.deleteMany();
+    const { userId } = await auth();
+    if (!userId) return { success: false };
+
+    // Clear existing for this user
+    await prisma.dailyEntry.deleteMany({ where: { userId } });
+    await prisma.failureLog.deleteMany({ where: { userId } });
+    await prisma.weeklyGoal.deleteMany({ where: { userId } });
 
     // Seed
-    await prisma.dailyEntry.createMany({ data: entries });
-    await prisma.failureLog.createMany({ data: failures });
-    await prisma.weeklyGoal.createMany({ data: goals });
+    const entriesWithAuth = entries.map(e => ({ ...e, userId }));
+    const failuresWithAuth = failures.map(f => ({ ...f, userId }));
+    const goalsWithAuth = goals.map(g => ({ ...g, userId }));
+
+    await prisma.dailyEntry.createMany({ data: entriesWithAuth });
+    await prisma.failureLog.createMany({ data: failuresWithAuth });
+    await prisma.weeklyGoal.createMany({ data: goalsWithAuth });
 
     revalidatePath('/');
     return { success: true };
@@ -256,11 +342,14 @@ export async function seedDatabase(entries: any[], failures: any[], goals: any[]
 
 export async function clearDatabase() {
   try {
-    await prisma.dailyEntry.deleteMany();
-    await prisma.failureLog.deleteMany();
-    await prisma.weeklyGoal.deleteMany();
-    await prisma.weeklyReview.deleteMany();
-    await prisma.focusSession.deleteMany();
+    const { userId } = await auth();
+    if (!userId) return { success: false };
+
+    await prisma.dailyEntry.deleteMany({ where: { userId } });
+    await prisma.failureLog.deleteMany({ where: { userId } });
+    await prisma.weeklyGoal.deleteMany({ where: { userId } });
+    await prisma.weeklyReview.deleteMany({ where: { userId } });
+    await prisma.focusSession.deleteMany({ where: { userId } });
     
     revalidatePath('/');
     return { success: true };

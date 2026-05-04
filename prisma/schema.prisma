@@ -12,7 +12,8 @@ datasource db {
 
 model DailyEntry {
   id                 String   @id @default(uuid())
-  date               String   @unique // YYYY-MM-DD
+  userId             String
+  date               String   // YYYY-MM-DD
   
   // DSA
   dsaHours           Float
@@ -40,10 +41,13 @@ model DailyEntry {
 
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+
+  @@unique([userId, date])
 }
 
 model FailureLog {
   id          String   @id @default(uuid())
+  userId      String
   date        String
   missedTask  String
   reason      String
@@ -56,7 +60,8 @@ model FailureLog {
 
 model WeeklyGoal {
   id                      String   @id @default(uuid())
-  weekStart               String   @unique // ISO date of Monday
+  userId                  String
+  weekStart               String   // ISO date of Monday
   weekEnd                 String
   dsaTopics               String
   backendTopics           String
@@ -68,21 +73,27 @@ model WeeklyGoal {
   projectGoalCompleted    Boolean
 
   createdAt               DateTime @default(now())
+
+  @@unique([userId, weekStart])
 }
 
 model WeeklyReview {
   id             String   @id @default(uuid())
-  weekStart      String   @unique
+  userId         String
+  weekStart      String
   weekEnd        String
   metGoals       Boolean
   whatWentWrong  String
   whatToImprove  String
   rating         Int
   createdAt      DateTime @default(now())
+
+  @@unique([userId, weekStart])
 }
 
 model FocusSession {
   id              String   @id @default(uuid())
+  userId          String
   date            String
   category        String
   durationMinutes Int
@@ -91,6 +102,7 @@ model FocusSession {
 
 model NamasteDevSession {
   id             String   @id @default(uuid())
+  userId         String
   token          String   @db.Text
   sessionToken   String   @db.Text
   lastUpdated    DateTime @default(now())
@@ -98,7 +110,10 @@ model NamasteDevSession {
 
 model ExternalStats {
   id             String   @id @default(uuid())
-  platform       String   @unique // e.g., "namastedev"
+  userId         String
+  platform       String   // e.g., "namastedev"
   data           Json     // Stores currentStreak, longestStreak, currentCourse, etc.
   lastSynced     DateTime @default(now())
+
+  @@unique([userId, platform])
 }

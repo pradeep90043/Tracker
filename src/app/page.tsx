@@ -31,6 +31,8 @@ const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'goals', label: 'Goals', icon: '🏁' },
 ];
 
+import { UserButton } from "@clerk/nextjs";
+
 export default function HomePage() {
   const tracker = useTracker();
   const [activeTab, setActiveTab] = useState<TabId>('dashboard');
@@ -177,11 +179,13 @@ export default function HomePage() {
               {/* Dark mode toggle */}
               <button
                 onClick={tracker.toggleDarkMode}
-                className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors px-2 py-1 border border-zinc-700 rounded"
+                className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors px-2 py-1 border border-zinc-700 rounded mr-2"
                 title="Toggle dark mode"
               >
                 {tracker.darkMode ? '☀' : '●'}
               </button>
+
+              <UserButton afterSignOutUrl="/sign-in" />
             </div>
           </div>
 
