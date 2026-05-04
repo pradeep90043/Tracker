@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model DailyEntry {
+  id                 String   @id @default(uuid())
+  date               String   @unique // YYYY-MM-DD
+  
+  // DSA
+  dsaHours           Float
+  dsaProblemsSolved  Int
+  dsaTopic           String
+  
+  // Backend
+  backendHours       Float
+  backendTopic       String
+  
+  // AI
+  aiHours            Float
+  aiTopic            String
+  
+  // Booleans
+  projectWork        Boolean
+  revision           Boolean
+  deepWork           Boolean
+  
+  // Computed (stored for easier querying, though can be calculated)
+  totalHours         Float
+  score              Int
+  performanceLevel   String
+  passed             Boolean
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model FailureLog {
+  id          String   @id @default(uuid())
+  date        String
+  missedTask  String
+  reason      String
+  rootCause   String
+  fixAction   String
+  category    String
+
+  createdAt   DateTime @default(now())
+}
+
+model WeeklyGoal {
+  id                      String   @id @default(uuid())
+  weekStart               String   @unique // ISO date of Monday
+  weekEnd                 String
+  dsaTopics               String
+  backendTopics           String
+  aiTopics                String
+  projectGoal             String
+  dsaTopicsCompleted      String
+  backendTopicsCompleted  String
+  aiTopicsCompleted       String
+  projectGoalCompleted    Boolean
+
+  createdAt               DateTime @default(now())
+}
+
+model WeeklyReview {
+  id             String   @id @default(uuid())
+  weekStart      String   @unique
+  weekEnd        String
+  metGoals       Boolean
+  whatWentWrong  String
+  whatToImprove  String
+  rating         Int
+  createdAt      DateTime @default(now())
+}
+
+model FocusSession {
+  id              String   @id @default(uuid())
+  date            String
+  category        String
+  durationMinutes Int
+  completedAt     DateTime @default(now())
+}
+
+model NamasteDevSession {
+  id             String   @id @default(uuid())
+  token          String   @db.Text
+  sessionToken   String   @db.Text
+  lastUpdated    DateTime @default(now())
+}
+
+model ExternalStats {
+  id             String   @id @default(uuid())
+  platform       String   @unique // e.g., "namastedev"
+  data           Json     // Stores currentStreak, longestStreak, currentCourse, etc.
+  lastSynced     DateTime @default(now())
+}
