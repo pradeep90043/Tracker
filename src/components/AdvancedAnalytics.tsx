@@ -158,7 +158,7 @@ export default function AdvancedAnalytics({ entries, failures }: AdvancedAnalyti
                 outerRadius={75}
                 dataKey="hours"
                 nameKey="name"
-                label={({ name, hours }) => `${name}: ${hours}h`}
+                label={({ name, value }) => `${name}: ${value}h`}
               >
                 {timeDist.map((entry) => (
                   <Cell key={entry.name} fill={entry.fill} />

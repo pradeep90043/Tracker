@@ -113,7 +113,7 @@ export default function Charts({ entries }: ChartsProps) {
               outerRadius={80}
               dataKey="count"
               nameKey="level"
-              label={({ level, count }) => `${level}: ${count}`}
+              label={({ name, value }) => `${name}: ${value}`}
             >
               {scoreDist.map((entry) => (
                 <Cell key={entry.level} fill={PIE_COLORS[entry.level]} />

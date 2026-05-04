@@ -106,7 +106,7 @@ export interface WeeklyReview {
   whatWentWrong: string;
   whatToImprove: string;
   rating: number; // 1-10 self-rating
-  createdAt: string;
+  createdAt: string | Date;
 }
 
 /** Aggregate stats for the dashboard */
@@ -200,7 +200,7 @@ export interface FocusSession {
   date: string;
   category: 'dsa' | 'backend' | 'ai' | 'project';
   durationMinutes: number;
-  completedAt: string;
+  completedAt: string | Date;
 }
 
 /** AI analysis response */
