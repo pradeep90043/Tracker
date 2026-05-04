@@ -111,11 +111,11 @@ export function useTracker() {
 
   // --------------- Failure actions ---------------
 
-  const addFailureLog = useCallback(async (data: Omit<FailureLog, 'id'>) => {
+  const addFailureLog = useCallback(async (data: Omit<FailureLog, 'id' | 'userId'>) => {
     setSyncing(true);
     const result = await serverAddFailure(data);
     if (result.success && result.failure) {
-      setFailures(prev => [result.failure as FailureLog, ...prev]);
+      setFailures(prev => [result.failure as unknown as FailureLog, ...prev]);
     }
     setSyncing(false);
   }, []);
@@ -131,7 +131,7 @@ export function useTracker() {
 
   // --------------- Goals actions ---------------
 
-  const upsertGoal = useCallback(async (goal: WeeklyGoal) => {
+  const upsertGoal = useCallback(async (goal: Omit<WeeklyGoal, 'userId'>) => {
     setSyncing(true);
     const result = await serverUpsertGoal(goal);
     if (result.success) {
@@ -142,7 +142,7 @@ export function useTracker() {
 
   // --------------- Reviews actions ---------------
 
-  const addReview = useCallback(async (data: Omit<WeeklyReview, 'id' | 'createdAt'>) => {
+  const addReview = useCallback(async (data: Omit<WeeklyReview, 'id' | 'createdAt' | 'userId'>) => {
     setSyncing(true);
     const result = await serverAddReview(data);
     if (result.success) {
@@ -153,11 +153,11 @@ export function useTracker() {
 
   // --------------- Focus Session actions ---------------
 
-  const logFocusSession = useCallback(async (data: Omit<FocusSession, 'id'>) => {
+  const logFocusSession = useCallback(async (data: Omit<FocusSession, 'id' | 'userId'>) => {
     setSyncing(true);
     const result = await serverAddFocusSession(data);
     if (result.success && result.session) {
-      setFocusSessions(prev => [result.session as FocusSession, ...prev]);
+      setFocusSessions(prev => [result.session as unknown as FocusSession, ...prev]);
     }
     setSyncing(false);
   }, []);

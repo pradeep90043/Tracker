@@ -11,7 +11,7 @@ interface WeeklyReviewModalProps {
   weekStart: string;
   weekEnd: string;
   pastReviews: WeeklyReview[];
-  onSubmit: (data: Omit<WeeklyReview, 'id' | 'createdAt'>) => void;
+  onSubmit: (data: Omit<WeeklyReview, 'id' | 'createdAt' | 'userId'>) => void;
   onDismiss: () => void;
 }
 

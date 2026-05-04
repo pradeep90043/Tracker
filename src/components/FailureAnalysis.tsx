@@ -10,11 +10,11 @@ import { FAILURE_CATEGORIES } from '@/types';
 
 interface FailureAnalysisProps {
   failures: FailureLog[];
-  onAdd: (data: Omit<FailureLog, 'id'>) => void;
+  onAdd: (data: Omit<FailureLog, 'id' | 'userId'>) => void;
   onDelete: (id: string) => void;
 }
 
-const INITIAL_FORM: Omit<FailureLog, 'id'> = {
+const INITIAL_FORM: Omit<FailureLog, 'id' | 'userId'> = {
   date: new Date().toISOString().slice(0, 10),
   missedTask: '',
   reason: '',

@@ -127,7 +127,7 @@ export async function getFailures(): Promise<FailureLog[]> {
   }
 }
 
-export async function addFailure(data: Omit<FailureLog, 'id'>) {
+export async function addFailure(data: Omit<FailureLog, 'id' | 'userId'>) {
   try {
     const { userId } = await auth();
     if (!userId) return { success: false };
@@ -144,7 +144,7 @@ export async function addFailure(data: Omit<FailureLog, 'id'>) {
       },
     });
     revalidatePath('/');
-    return { success: true, failure };
+    return { success: true, failure: failure as unknown as FailureLog };
   } catch (error) {
     console.error('Failed to add failure:', error);
     return { success: false };
@@ -181,7 +181,7 @@ export async function getGoals(): Promise<WeeklyGoal[]> {
   }
 }
 
-export async function upsertGoal(goal: WeeklyGoal) {
+export async function upsertGoal(goal: Omit<WeeklyGoal, 'userId'>) {
   try {
     const { userId } = await auth();
     if (!userId) return { success: false };
@@ -239,7 +239,7 @@ export async function getReviews(): Promise<WeeklyReview[]> {
   }
 }
 
-export async function addReview(data: Omit<WeeklyReview, 'id' | 'createdAt'>) {
+export async function addReview(data: Omit<WeeklyReview, 'id' | 'createdAt' | 'userId'>) {
   try {
     const { userId } = await auth();
     if (!userId) return { success: false };
@@ -291,7 +291,7 @@ export async function getFocusSessions(): Promise<FocusSession[]> {
   }
 }
 
-export async function addFocusSession(data: Omit<FocusSession, 'id'>) {
+export async function addFocusSession(data: Omit<FocusSession, 'id' | 'userId'>) {
   try {
     const { userId } = await auth();
     if (!userId) return { success: false };

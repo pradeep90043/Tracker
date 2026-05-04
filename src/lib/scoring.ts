@@ -38,7 +38,7 @@ export function getPerformanceLevel(score: number): PerformanceLevel {
 }
 
 /** Build a complete DailyEntry from form data */
-export function createDailyEntry(formData: DailyEntryFormData): DailyEntry {
+export function createDailyEntry(formData: DailyEntryFormData): Omit<DailyEntry, 'userId'> {
   const totalHours = formData.dsaHours + formData.backendHours + formData.aiHours;
   const score = calculateScore(formData);
   const performanceLevel = getPerformanceLevel(score);

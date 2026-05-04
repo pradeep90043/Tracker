@@ -11,7 +11,7 @@ import { v4 } from '@/lib/uuid';
 interface WeeklyGoalsProps {
   goals: WeeklyGoal[];
   entries: DailyEntry[];
-  onUpsert: (goal: WeeklyGoal) => void;
+  onUpsert: (goal: Omit<WeeklyGoal, 'userId'>) => void;
 }
 
 function getWeekBounds(): { start: string; end: string } {
@@ -27,7 +27,7 @@ function getWeekBounds(): { start: string; end: string } {
   };
 }
 
-const INITIAL_GOAL = (): WeeklyGoal => {
+const INITIAL_GOAL = (): Omit<WeeklyGoal, 'userId'> => {
   const { start, end } = getWeekBounds();
   return {
     id: v4(),
@@ -49,7 +49,7 @@ export default function WeeklyGoals({ goals, entries, onUpsert }: WeeklyGoalsPro
 
   // Find or create current week goal
   const currentGoal = goals.find(g => g.weekStart === start);
-  const [form, setForm] = useState<WeeklyGoal>(currentGoal || INITIAL_GOAL());
+  const [form, setForm] = useState<Omit<WeeklyGoal, 'userId'>>(currentGoal || INITIAL_GOAL());
   const [editing, setEditing] = useState(!currentGoal);
 
   // Weekly stats from entries

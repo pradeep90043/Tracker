@@ -5,6 +5,7 @@
 /** A single daily tracking entry */
 export interface DailyEntry {
   id: string;
+  userId: string;
   date: string; // ISO date string YYYY-MM-DD
 
   // DSA
@@ -74,6 +75,7 @@ export const FAILURE_CATEGORIES: FailureCategory[] = [
 /** Failure analysis log */
 export interface FailureLog {
   id: string;
+  userId: string;
   date: string;
   missedTask: string;
   reason: string;
@@ -85,6 +87,7 @@ export interface FailureLog {
 /** Weekly goals */
 export interface WeeklyGoal {
   id: string;
+  userId: string;
   weekStart: string; // ISO date of Monday
   weekEnd: string;   // ISO date of Sunday
   dsaTopics: string;
@@ -100,6 +103,7 @@ export interface WeeklyGoal {
 /** Weekly review — self-reflection every 7 days */
 export interface WeeklyReview {
   id: string;
+  userId: string;
   weekStart: string;
   weekEnd: string;
   metGoals: boolean;
@@ -197,6 +201,7 @@ export interface PomodoroState {
 /** Focus mode session log */
 export interface FocusSession {
   id: string;
+  userId: string;
   date: string;
   category: 'dsa' | 'backend' | 'ai' | 'project';
   durationMinutes: number;

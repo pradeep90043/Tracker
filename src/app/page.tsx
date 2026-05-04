@@ -185,7 +185,7 @@ export default function HomePage() {
                 {tracker.darkMode ? '☀' : '●'}
               </button>
 
-              <UserButton afterSignOutUrl="/sign-in" />
+              <UserButton />
             </div>
           </div>
 

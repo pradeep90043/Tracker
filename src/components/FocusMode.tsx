@@ -8,7 +8,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import type { PomodoroState, FocusSession } from '@/types';
 
 interface FocusModeProps {
-  onSessionComplete: (session: Omit<FocusSession, 'id'>) => void;
+  onSessionComplete: (session: Omit<FocusSession, 'id' | 'userId'>) => void;
   todayHours: { dsa: number; backend: number; ai: number; project: number };
   targetHours: { dsa: number; backend: number; ai: number; project: number };
 }
