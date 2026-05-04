@@ -12,7 +12,6 @@ export async function getEntries(): Promise<DailyEntry[]> {
     const entries = await prisma.dailyEntry.findMany({
       orderBy: { date: 'asc' },
     });
-    // Prisma models match our DailyEntry interface closely enough
     return entries as unknown as DailyEntry[];
   } catch (error) {
     console.error('Failed to fetch entries:', error);

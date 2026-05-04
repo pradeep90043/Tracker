@@ -30,6 +30,8 @@ const INITIAL_FORM: DailyEntryFormData = {
 export default function DailyEntryForm({ onSubmit, existingDates }: DailyEntryFormProps) {
   const [form, setForm] = useState<DailyEntryFormData>(INITIAL_FORM);
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const totalHours = form.dsaHours + form.backendHours + form.aiHours;
   const score = useMemo(() => calculateScore(form), [form]);
@@ -42,13 +44,23 @@ export default function DailyEntryForm({ onSubmit, existingDates }: DailyEntryFo
   function updateField<K extends keyof DailyEntryFormData>(key: K, value: DailyEntryFormData[K]) {
     setForm(prev => ({ ...prev, [key]: value }));
     setSubmitted(false);
+    setError(null);
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSubmit(form);
-    setSubmitted(true);
-    setForm(INITIAL_FORM);
+    setLoading(true);
+    setError(null);
+    try {
+      await onSubmit(form);
+      setSubmitted(true);
+      setForm(INITIAL_FORM);
+    } catch (err) {
+      console.error('Submission error:', err);
+      setError('Failed to save entry. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -222,13 +234,24 @@ export default function DailyEntryForm({ onSubmit, existingDates }: DailyEntryFo
       {/* Submit */}
       <button
         type="submit"
-        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-md text-sm transition-colors disabled:opacity-50"
-        disabled={totalHours === 0}
+        className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-md text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+        disabled={totalHours === 0 || loading}
       >
-        {isDuplicate ? 'Update Entry' : 'Log Entry'}
+        {loading ? (
+          <>
+            <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            Processing...
+          </>
+        ) : (
+          isDuplicate ? 'Update Entry' : 'Log Entry'
+        )}
       </button>
 
-      {submitted && (
+      {error && (
+        <p className="text-red-400 text-sm text-center">{error}</p>
+      )}
+
+      {submitted && !error && (
         <p className="text-emerald-400 text-sm text-center">✓ Entry logged successfully.</p>
       )}
     </form>
